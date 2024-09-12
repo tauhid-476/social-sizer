@@ -5,6 +5,7 @@ import { Download, Clock, FileDown, FileUp } from 'lucide-react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { Video } from '@/types'
+import Image from 'next/image'
 
 //to get relative time like 6 days ago etc...
 dayjs.extend(relativeTime);
@@ -115,7 +116,7 @@ const VideoCard: React.FC<VideoCardProps> = ({video, onDownload})=> {
                 />
               )
             ) : (
-              <img
+              <Image
                 src={getThumbnailUrl(video.publicId)}
                 alt={video.title}
                 className="w-full h-full object-cover"

@@ -120,7 +120,7 @@ export default function AppLayout({
 
         {/* PageContent */}
         <main className="flex-grow">
-          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 my-5 md:my-0 ">
+          <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 my-0">
             {children}
           </div>
         </main>
