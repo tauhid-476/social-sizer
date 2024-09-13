@@ -95,7 +95,7 @@ export default function SocialShare() {
       })
   }
   return (
-    <div className='container mx-auto p-4 max-w-4xl'>
+    <div className='container mx-auto p-4 max-w-4xl min-h-screen bg-black'>
       <h1 className='text-center text-3xl font-bold mb-6'>Social Media Image Generator</h1>
 
       <div className="card">
