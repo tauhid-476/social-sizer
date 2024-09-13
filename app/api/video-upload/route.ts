@@ -1,8 +1,8 @@
-//same a simage upload with minor tweaks
-import { v2 as cloudinary} from 'cloudinary';
+import { v2 as cloudinary } from "cloudinary";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from "@prisma/client";
+//same a simage upload with minor tweaks
 
 // this api :
 //uploadvideo
@@ -12,30 +12,32 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+prisma
+  .$connect()
+  .then(() => console.log("Connected to Prisma"))
+  .catch((e) => console.log("Error connecting to Prisma", e));
+
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
 
   api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET
-
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
 interface CloudinaryUploadResults {
   public_id: string;
-  [key: string]: any
+  [key: string]: any;
   bytes: number;
   duration?: number;
 }
 //video--> we need to calculate the compressed size
 export async function POST(request: NextRequest) {
   try {
-
     const { userId } = auth();
 
     if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
 
     //good habit in saas product --> check for errors if there are no envs
     if (
@@ -43,10 +45,11 @@ export async function POST(request: NextRequest) {
       !process.env.CLOUDINARY_API_KEY ||
       !process.env.CLOUDINARY_API_SECRET
     ) {
-      return NextResponse.json({ error: "Cloudinary credentiasl not found" }, { status: 500 })
+      return NextResponse.json(
+        { error: "Cloudinary credentiasl not found" },
+        { status: 500 }
+      );
     }
-
-
 
     const formData = await request.formData();
 
@@ -58,32 +61,28 @@ export async function POST(request: NextRequest) {
     const originalSize = formData.get("originalSize") as string;
 
     if (!file) {
-      return NextResponse.json({ error: "File not found" }, { status: 400 })
+      return NextResponse.json({ error: "File not found" }, { status: 400 });
     }
-
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-
     const result = await new Promise<CloudinaryUploadResults>(
       (resolve, reject) => {
         const uploadStream = cloudinary.uploader.upload_stream(
-          { 
+          {
             resource_type: "video",
             folder: "next-cloudinary-videos",
-            transformation: [
-              {quality: "auto",fetch_format:"mp4",}
-            ]
+            transformation: [{ quality: "auto", fetch_format: "mp4" }],
           },
           (error, result) => {
-            if (error) reject(error)
-            else resolve(result as CloudinaryUploadResults)
+            if (error) reject(error);
+            else resolve(result as CloudinaryUploadResults);
           }
-        )
-        uploadStream.end(buffer)
+        );
+        uploadStream.end(buffer);
       }
-    )
+    );
 
     const video = await prisma.video.create({
       data: {
@@ -93,21 +92,21 @@ export async function POST(request: NextRequest) {
         originalSize,
         compressedSize: String(result.bytes),
         duration: result.duration || 0,
-      }
-    })
-    console.log("The result object is: ",result);
-    
-    console.log("Video uploaded successfully", video);
-    
-    return NextResponse.json(video)
+      },
+    });
+    console.log("The result object is: ", result);
 
-  } catch (error) {
-    console.log("Upload video failed", error);
-    return NextResponse.json({ error: "Error uploading video" }, { status: 500 })
-  }finally{
+    console.log("Video uploaded successfully", video);
+
+    return NextResponse.json(video);
+  } catch (error: any) {
+    console.error("Upload video failed", error.message);
+    console.error(error.stack);
+    return NextResponse.json(
+      { error: "Error uploading video" },
+      { status: 500 }
+    );
+  } finally {
     await prisma.$disconnect();
   }
-
 }
-
-
