@@ -1,9 +1,0 @@
-{
-  "functions": {
-    "api/*": {
-      "maxDuration": 10,
-      "memory": 1024,
-      "maxBodySize": "60mb"
-    }
-  }
-}
