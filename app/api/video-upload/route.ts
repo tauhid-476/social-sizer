@@ -31,14 +31,6 @@ interface CloudinaryUploadResults {
   duration?: number;
 }
 
-  export const config = {
-    api: {
-      bodyParser: {
-        sizeLimit: '60mb',
-      },
-    },
-  };
-
 //video--> we need to calculate the compressed size
 export async function POST(request: NextRequest) {
   try {
