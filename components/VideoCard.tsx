@@ -1,11 +1,23 @@
 import React,{useState, useEffect, useCallback} from 'react'
 import { getCldImageUrl, getCldVideoUrl } from 'next-cloudinary'
 import {filesize} from 'filesize'
-import { Download, Clock, FileDown, FileUp } from 'lucide-react'
+import { Download, Clock, FileDown, FileUp, Trash2 } from 'lucide-react'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { Video } from '@/types'
 import Image from 'next/image'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog'; 
+
 
 //to get relative time like 6 days ago etc...
 dayjs.extend(relativeTime);
@@ -13,8 +25,10 @@ dayjs.extend(relativeTime);
 interface VideoCardProps{
   video: Video
   onDownload: (url:string,title:string) => void;
+  onDelete: (id:string) => void;
+
 }
-const VideoCard: React.FC<VideoCardProps> = ({video, onDownload})=> {
+const VideoCard: React.FC<VideoCardProps> = ({video, onDownload, onDelete})=> {
 
   const[isHovered,setIsHovered] = useState(false)
   const[previewError,setPreviewError] = useState(false)
@@ -155,22 +169,43 @@ const VideoCard: React.FC<VideoCardProps> = ({video, onDownload})=> {
               </div>
             </div>
             <div className="flex justify-between items-center mt-4">
-              <div className="text-sm font-semibold">
-                Compression:{" "}
-                <span className="text-accent">{compressionPercentage}%</span>
-              </div>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() =>
-                  onDownload(getFullVideoUrl(video.publicId), video.title)
-                }
-              >
-                <Download size={16} />
-              </button>
-            </div>
+          <div className="text-sm font-semibold">
+            Compression:{" "}
+            <span className="text-accent">{compressionPercentage}%</span>
+          </div>
+          <div className="flex space-x-2">
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={() => onDownload(getFullVideoUrl(video.publicId), video.title)}
+            >
+              <Download size={16} />
+            </button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="btn btn-error btn-sm">
+                  <Trash2 size={16} />
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent  className='bg-black text-white border-slate-600'>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the video.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className='hover:bg-black-500'>Cancel</AlertDialogCancel>
+                  <AlertDialogAction className="bg-red-500 hover:bg-red-600" onClick={() => onDelete(video.id)}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
-      );
-}
+      </div>
+    </div>
+  );
+};
 
-export default VideoCard
+export default VideoCard;
