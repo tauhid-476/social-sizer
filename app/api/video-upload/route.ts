@@ -2,6 +2,8 @@ import { v2 as cloudinary } from "cloudinary";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { PrismaClient } from "@prisma/client";
+import {del, put} from "@vercel/blob";
+import { getMetadata} from "video-metadata-thumbnails";
 //same a simage upload with minor tweaks
 
 // this api :
@@ -33,6 +35,7 @@ interface CloudinaryUploadResults {
 
 //video--> we need to calculate the compressed size
 export async function POST(request: NextRequest) {
+  let blobUrl = "";
   try {
     const { userId } = auth();
 
@@ -65,12 +68,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File not found" }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const blob = await put(`temp-videos/${file.name}`,file,{
+      access:"public"
+    })
+    blobUrl = blob.url
+
+
+    // const bytes = await file.arrayBuffer();
+    // const buffer = Buffer.from(bytes);
 
     const result = await new Promise<CloudinaryUploadResults>(
       (resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
+         cloudinary.uploader.upload(
+          blob.url,
           {
             resource_type: "video",
             folder: "next-cloudinary-videos",
@@ -81,9 +91,10 @@ export async function POST(request: NextRequest) {
             else resolve(result as CloudinaryUploadResults);
           }
         );
-        uploadStream.end(buffer);
       }
     );
+
+    await del(blobUrl);
 
     const video = await prisma.video.create({
       data: {
@@ -103,6 +114,16 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error("Upload video failed", error.message);
     console.error(error.stack);
+    
+    // Attempt to delete the temporary file if it exists and an error occurred
+    if (blobUrl) {
+      try {
+        await del(blobUrl);
+      } catch (deleteError) {
+        console.error("Failed to delete temporary file:", deleteError);
+      }
+    }
+
     return NextResponse.json(
       { error: "Error uploading video" },
       { status: 500 }

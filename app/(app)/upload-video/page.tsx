@@ -9,6 +9,7 @@ const UploadVideo = () => {
   const [title,setTitle] = useState("")
   const[description,setDescription] = useState("")
   const[isUploading,setIsUploading] = useState(false)
+  const[uploadProgress,setUploadProgress] = useState(0);
 
   //max file size of 60 mb
    const MAX_FILE_SIZE = 60 * 1024 * 1024;
@@ -31,6 +32,9 @@ const UploadVideo = () => {
     //display in the frontend
 
      setIsUploading(true);
+     setUploadProgress(0);
+
+
      const formData = new FormData();
      formData.append("file", file);
      formData.append("title", title);
@@ -38,7 +42,12 @@ const UploadVideo = () => {
      formData.append("originalSize",file.size.toString());
 
      try {
-      const response = await axios.post("/api/video-upload",formData)
+      const response = await axios.post("/api/video-upload",formData,{
+        onUploadProgress: (progressEvent)=>{
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total!);
+          setUploadProgress(percentCompleted);
+        }
+      })
 
       if(response.status===200){
         alert("Video uploaded successfully");
@@ -99,12 +108,22 @@ const UploadVideo = () => {
            />
         </div>
 
+
+        {isUploading && 
+        <div className='w-full bg-gray-200 rounded-full h-2.5 '>
+           <div 
+           className="bg-blue-600 h-2.5 rounded-full"
+           style={{width: `${uploadProgress}%`}}
+           >
+           </div>
+        </div> }
+
         <button
         type='submit'
         className='btn btn-primary'
         disabled={isUploading}
         >
-          {isUploading ? "Uploading...":"Uplaod Video"}
+          {isUploading ? `Uploading... ${uploadProgress}%`:"Uplaod Video"}
         </button>
         
       </form>     

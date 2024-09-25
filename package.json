@@ -28,7 +28,8 @@
     "react-bootstrap": "^2.10.4",
     "react-dom": "^18",
     "tailwind-merge": "^2.5.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "video-metadata-thumbnails": "^1.0.22"
   },
   "devDependencies": {
     "@types/node": "^20.16.2",
